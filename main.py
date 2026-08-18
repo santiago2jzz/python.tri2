@@ -5,8 +5,6 @@ Calculadora de IMC (Índice de Massa Corporal)
 - Classifica o resultado e dá um feedback
 - Guarda um histórico com data/hora em um arquivo CSV local
 - Mostra uma tabela formatada com todos os cálculos já feitos
-
-Uso: python3 calculadora_imc.py
 """
 
 import csv
@@ -22,7 +20,6 @@ def calcular_imc(peso: float, altura: float) -> float:
 
 
 def classificar_imc(imc: float) -> tuple[str, str]:
-    """Retorna (classificação, feedback) de acordo com a faixa de IMC."""
     if imc < 18.5:
         return (
             "Abaixo do peso",
@@ -62,7 +59,7 @@ def classificar_imc(imc: float) -> tuple[str, str]:
 
 
 def ler_float(mensagem: str) -> float:
-    """Pede um número ao usuário até que um valor válido e positivo seja digitado."""
+    
     while True:
         try:
             valor = float(input(mensagem).replace(",", "."))
@@ -75,7 +72,7 @@ def ler_float(mensagem: str) -> float:
 
 
 def garantir_arquivo():
-    """Cria o arquivo CSV com cabeçalho caso ele ainda não exista."""
+    
     if not os.path.exists(ARQUIVO_HISTORICO):
         with open(ARQUIVO_HISTORICO, mode="w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
