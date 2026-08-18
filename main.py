@@ -1,25 +1,30 @@
 """
-Calculadora de IMC (Índice de Massa Corporal)
------------------------------------------------
-- Calcula o IMC a partir de peso e altura
-- Classifica o resultado e dá um feedback
-- Guarda um histórico com data/hora em um arquivo CSV local
-- Mostra uma tabela formatada com todos os cálculos já feitos
+Calculadora de IMC
+Calcula, classifica e salva os resultados em um arquivo CSV.
 """
 
 import csv
 import os
 from datetime import datetime
 
+"""Nome do arquivo onde o histórico será salvo."""
 ARQUIVO_HISTORICO = "historico_imc.csv"
+
+"""Nomes das colunas do arquivo CSV."""
 CABECALHO = ["Data", "Nome", "Peso (kg)", "Altura (m)", "IMC", "Classificação", "Feedback"]
 
 
 def calcular_imc(peso: float, altura: float) -> float:
+    """
+    Calcula o IMC usando o peso e a altura.
+    """
     return peso / (altura ** 2)
 
 
 def classificar_imc(imc: float) -> tuple[str, str]:
+    """
+    Recebe o IMC e retorna a classificação e o feedback.
+    """
     if imc < 18.5:
         return (
             "Abaixo do peso",
@@ -59,20 +64,28 @@ def classificar_imc(imc: float) -> tuple[str, str]:
 
 
 def ler_float(mensagem: str) -> float:
-    
+    """
+    Pede um número ao usuário e verifica se ele é válido.
+    """
     while True:
         try:
             valor = float(input(mensagem).replace(",", "."))
+
+            """Verifica se o valor é maior que zero."""
             if valor <= 0:
                 print("O valor deve ser maior que zero. Tente novamente.")
                 continue
+
             return valor
+
         except ValueError:
             print("Valor inválido. Digite apenas números (ex: 70.5).")
 
 
 def garantir_arquivo():
-    
+    """
+    Cria o arquivo CSV caso ele ainda não exista.
+    """
     if not os.path.exists(ARQUIVO_HISTORICO):
         with open(ARQUIVO_HISTORICO, mode="w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
@@ -80,9 +93,14 @@ def garantir_arquivo():
 
 
 def salvar_registro(nome: str, peso: float, altura: float, imc: float, classificacao: str, feedback: str):
+    """
+    Salva os dados do cálculo no arquivo CSV.
+    """
     garantir_arquivo()
+
     with open(ARQUIVO_HISTORICO, mode="a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
+
         writer.writerow([
             datetime.now().strftime("%d/%m/%Y %H:%M"),
             nome,
@@ -90,92 +108,118 @@ def salvar_registro(nome: str, peso: float, altura: float, imc: float, classific
             f"{altura:.2f}",
             f"{imc:.2f}",
             classificacao,
-            feedback,
+            feedback
         ])
 
 
 def carregar_historico() -> list[list[str]]:
+    """
+    Lê os cálculos salvos no arquivo.
+    """
     garantir_arquivo()
+
     with open(ARQUIVO_HISTORICO, mode="r", newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         linhas = list(reader)
-    return linhas[1:] if linhas else []  # remove o cabeçalho
+
+    """Remove o cabeçalho e retorna os registros."""
+    return linhas[1:] if linhas else []
 
 
 def imprimir_tabela(linhas: list[list[str]]):
+    """
+    Mostra o histórico completo no terminal.
+    """
     if not linhas:
         print("\nAinda não há registros no histórico.\n")
         return
 
-    # Define larguras de coluna com base no maior conteúdo (limitando o feedback)
-    colunas = ["Data", "Nome", "Peso", "Altura", "IMC", "Classificação", "Feedback"]
-    largura_feedback = 45
+    """Mostra os dados principais de cada cálculo."""
+    print("\n" + "=" * 70)
+    print("HISTÓRICO DE CÁLCULOS")
+    print("=" * 70)
 
-    linhas_formatadas = []
     for linha in linhas:
-        feedback_curto = (linha[6][:largura_feedback - 3] + "...") if len(linha[6]) > largura_feedback else linha[6]
-        linhas_formatadas.append([linha[0], linha[1], linha[2], linha[3], linha[4], linha[5], feedback_curto])
+        print(f"Data: {linha[0]}")
+        print(f"Nome: {linha[1]}")
+        print(f"Peso: {linha[2]} kg")
+        print(f"Altura: {linha[3]} m")
+        print(f"IMC: {linha[4]}")
+        print(f"Classificação: {linha[5]}")
+        print(f"Feedback: {linha[6]}")
+        print("-" * 70)
 
-    larguras = [len(c) for c in colunas]
-    for linha in linhas_formatadas:
-        for i, valor in enumerate(linha):
-            larguras[i] = max(larguras[i], len(valor))
-
-    def formatar_linha(valores):
-        return " | ".join(str(v).ljust(larguras[i]) for i, v in enumerate(valores))
-
-    separador = "-+-".join("-" * l for l in larguras)
-
-    print("\n" + formatar_linha(colunas))
-    print(separador)
-    for linha in linhas_formatadas:
-        print(formatar_linha(linha))
     print()
 
 
 def menu():
+    """
+    Mostra o menu e recebe a opção escolhida.
+    """
     print("=" * 50)
     print("        CALCULADORA DE IMC")
     print("=" * 50)
     print("1 - Calcular novo IMC")
-    print("2 - Ver histórico (tabela)")
+    print("2 - Ver histórico")
     print("3 - Sair")
     print("=" * 50)
+
     return input("Escolha uma opção: ").strip()
 
 
 def fluxo_calculo():
+    """
+    Pede os dados, calcula o IMC e salva o resultado.
+    """
     print("\n--- Novo cálculo de IMC ---")
+
+    """Pede o nome do usuário."""
     nome = input("Nome (opcional, pressione Enter para pular): ").strip() or "Anônimo"
+
+    """Pede o peso e a altura."""
     peso = ler_float("Peso em kg (ex: 70.5): ")
     altura = ler_float("Altura em metros (ex: 1.75): ")
 
+    """Calcula e classifica o IMC."""
     imc = calcular_imc(peso, altura)
     classificacao, feedback = classificar_imc(imc)
 
+    """Mostra o resultado completo."""
     print(f"\nResultado de {nome}:")
     print(f"IMC: {imc:.2f}")
     print(f"Classificação: {classificacao}")
     print(f"Feedback: {feedback}\n")
 
+    """Salva o resultado no histórico."""
     salvar_registro(nome, peso, altura, imc, classificacao, feedback)
+
     print("Resultado salvo no histórico!\n")
 
 
 def main():
+    """
+    Controla o funcionamento principal do programa.
+    """
     while True:
         opcao = menu()
+
         if opcao == "1":
             fluxo_calculo()
+
         elif opcao == "2":
             historico = carregar_historico()
             imprimir_tabela(historico)
+
         elif opcao == "3":
             print("Até logo!")
             break
+
         else:
             print("Opção inválida. Tente novamente.\n")
 
 
+"""
+Inicia o programa.
+"""
 if __name__ == "__main__":
     main()
